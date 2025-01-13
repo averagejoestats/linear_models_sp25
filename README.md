@@ -13,6 +13,7 @@ Course Github Page for Wash U SDS 439 - Linear Statistical Models
 [Installing git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (program for getting things from github)  
 [Github Tutorial](https://www.youtube.com/watch?v=0fKg7e37bQE)  
 [Git bash for windows](https://www.atlassian.com/git/tutorials/git-bash)   
+[SSH keys](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
 
 ## Emacs info
 
