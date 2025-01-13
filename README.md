@@ -1,6 +1,8 @@
 # linear_models_sp25
 Course Github Page for Wash U SDS 439 - Linear Statistical Models
 
+Instructor Joe Guinness, Washington University
+
 ## R 
 
 [Installing R](https://cran.r-project.org/)   
