@@ -9,6 +9,7 @@ Instructor Joe Guinness, Washington University
 [R tutorial from CRAN](https://cran.r-project.org/doc/manuals/R-intro.pdf) (Chapters 1-5 will get you up to speed)  
 [Other R manuals](https://cran.r-project.org/manuals.html)   
 [Installing RStudio](https://www.rstudio.com/products/rstudio/download/)  
+[Intro R Video](https://youtu.be/9Psu77Zo8V8?feature=shared)    
 
 ## Git and Github
 
