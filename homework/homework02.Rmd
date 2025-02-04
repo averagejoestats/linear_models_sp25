@@ -23,7 +23,7 @@ A thorough description of the data can be found on page 32 of the `alr4` documen
 
 
 1. You should try to start your analyses by looking at the data, so you have an idea
-of what to expect from your analysis. Make 4 informative plots of the data, to familiarize yourself with the major features of the data. Use good plotting practice, labeling
+of what to expect from your analysis. Make 2 informative plots of the data, to familiarize yourself with the major features of the data. Use good plotting practice, labeling
 your axes, using legends when appropriate, etc. A good plot should show several
 aspects of the data, without overwhelming you.
 
