@@ -1,0 +1,162 @@
+---
+title: "SDS 439 - Homework 01"
+author: "Joe Guinness"
+date: "2025-01-22"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Homework Exercises
+
+This homework concerns analysis of the Galton families dataset, which we will use
+several times throughout the course to demonstrate various models and concepts.
+Each row of the dataset describes data for one child. It has columns identifying
+which family the child belongs to (`family`), the father's height (`father`), the mother's height (`mother`), the number of children in the family (`children`), the ordering within the family of the present child (`childNum`), the sex of the child (`sex`), and the child's height (`childHeight`). It also has a derived variable called `midparentHeight` that
+is equal to `(father + 1.08*mother)/2`.
+
+The dataset is located in the course repository in the file `datasets/galton_families.csv`.
+
+1. Read in the Galton Families dataset and print out the first six rows of the dataset
+
+```{r}
+galton <- read.csv("../datasets/galton_families.csv")
+head(galton)
+```
+
+2. Demonstrate that `midparentHeight = (father + 1.08*mother)/2`
+
+```{r}
+range( galton$midparentHeight - (galton$father + 1.08*galton$mother)/2 )
+```
+
+3. Make a plot of the data, showing information about the midparent height, the child   
+   height, and if you can, information about the sex. Try using a different plotting symbol 
+   for the two sexes. Make sure that your plot looks nice in the final pdf. This is what
+   we will grade.
+
+```{r}
+plot( 
+    galton$midparentHeight, galton$childHeight, type = "n",
+    xlab = "Midparent Height (inches)",
+    ylab = "Child Height (inches)",
+    main = "Galton Families Height Data"
+)
+males <- galton$sex == "male"
+points( galton$midparentHeight[males], galton$childHeight[males], col = "blue" )
+points( galton$midparentHeight[!males], galton$childHeight[!males], col = "magenta" )
+legend("bottomright", c("males","females"), col = c("blue","magenta"), pch = 1 )
+```
+
+4. Let's focus on one of the sexes, then we'll come back and analyze both of them.
+   Create a new dataframe that has data for only the male children, and print out
+   the first six rows.
+```{r}
+galton_males <- galton[ galton$sex == "male", ]
+head( galton_males )
+```
+
+5. Use the male dataframe to perform a regression of child height on midparent height "by 
+hand", which means doing all of the calculations without using the `lm` function.
+Print out your estimates for the regression coefficients, their standard errors,
+their t-statistics, and their p-values for the two sided test for whether the parameters equal 0. Also print out your estimate of the
+residual variance.
+
+```{r}
+x <- galton_males$midparentHeight
+y <- galton_males$childHeight
+n <- nrow( galton_males )
+xbar <- mean(x)
+ybar <- mean(y)
+sxx <- sum( (x-xbar)^2 )
+sxy <- sum( (x-xbar)*(y-ybar) )
+b1hat <- sxy/sxx
+b0hat <- ybar - b1hat*xbar
+sigmahat <- sqrt( 1/(n-2)*sum( (y - b0hat - b1hat*x )^2 ) )
+seb0 <- sigmahat*sqrt(1/n + xbar^2/sxx)
+seb1 <- sigmahat/sxx
+t0 <- b0hat/seb0
+t1 <- b1hat/seb1
+p0 <- 2*pt( -abs(t0), n - 2 )
+p1 <- 2*pt( -abs(t1), n - 2 )
+print( c( sigmahat = sigmahat ) )
+print( c(b0hat = b0hat, seb0 = seb0, t0 = t0, p0 = p0) )
+print( c(b1hat = b1hat, seb1 = seb1, t1 = t1, p1 = p1) )
+```
+
+6. Why do you think that the intercept estimate has such a large standard error?
+Type your answer here
+
+Answer: The midparent heights are never close to zero, and the intercept
+is essentially a prediction of childHeight when midparent height is zero,
+so it is an extrapolation and should have a large amount of uncertainty.
+
+
+
+7. Use the `lm` function to confirm your "by hand" calculations. Print the 
+summary table from the lm fit. Use the full dataset, but tell lm to 
+analyze only the males by specifying the `subset` argument of `lm`.
+
+```{r}
+fit_male <- lm( childHeight ~ midparentHeight, data = galton, subset = sex == "male" )
+print( summary( fit_male ) )
+```
+
+8. Perform two more regressions using `lm` by changing the covaraiate to `mother` and
+then to `father`. Print out the summary table for these two regressions.
+
+```{r}
+summary( lm( childHeight ~ father, data = galton, subset = sex == "male" ) )
+summary( lm( childHeight ~ mother, data = galton, subset = sex == "male" ) )
+```
+
+9. Use the information in the summary tables to argue which of the three models
+for `childHeight` is best. Is there a biological reason why this model is best?
+
+Answer: I would argue that the midparent height model is best because it has
+the lowest residual standard error (estimate of $\widehat{\sigma}$), which
+measures how far on average the data is from the predicted value. This makes
+sense biologically because both parents' heights contribute genetically
+to the children's heights.
+
+
+10. Perform a regression of `childHeight` on `midparentHeight` for the female children
+and print the summary matrix.
+
+```{r}
+fit_female <- lm( childHeight ~ midparentHeight, data = galton, subset = sex == "female" )
+print( summary( fit_female ) )
+```
+
+11. What are the major differences between the female model and the male model?
+
+Answer: The female model has a smaller intercept, smaller slope, and a smaller
+residual standard error. To see the effect of the different intercept and slope,
+refer to the plot below showing the regression lines. The small residual standard
+error is likely due to the fact that the female heights are less variable to
+begin with:
+
+```{r}
+sd( galton$childHeight[ galton$sex == "female" ] )
+sd( galton$childHeight[ galton$sex == "male" ] )
+```
+
+12. Finally, make a plot of childHeight against the midparentHeight, with the
+two estimated trend lines for males and females added to the plot.
+
+```{r}
+plot( 
+    galton$midparentHeight, galton$childHeight, type = "n",
+    xlab = "Midparent Height (inches)",
+    ylab = "Child Height (inches)",
+    main = "Galton Families Height Data"
+)
+males <- galton$sex == "male"
+points( galton$midparentHeight[males], galton$childHeight[males], col = "blue" )
+points( galton$midparentHeight[!males], galton$childHeight[!males], col = "magenta" )
+abline( fit_male$coefficients, col = "blue", lwd = 2 )
+abline( fit_female$coefficients, col = "magenta", lwd = 2 )
+legend("bottomright", c("males","females"), col = c("blue","magenta"), pch = 1 )
+```
