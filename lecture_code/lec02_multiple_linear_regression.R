@@ -59,7 +59,7 @@ summary(m1)$sigma
 summary(m1)$sigma^2/sd(BGSgirls$HT18)^2
 1 - summary(m1)$sigma^2/sd(BGSgirls$HT18)^2
 
-ss <- sum( m1$residuals^2 )
+rss <- sum( m1$residuals^2 )
 syy <- sum( ( BGSgirls$HT18 - mean(BGSgirls$HT18) )^2 )
 rss
 syy
