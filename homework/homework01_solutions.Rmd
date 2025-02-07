@@ -76,7 +76,7 @@ b1hat <- sxy/sxx
 b0hat <- ybar - b1hat*xbar
 sigmahat <- sqrt( 1/(n-2)*sum( (y - b0hat - b1hat*x )^2 ) )
 seb0 <- sigmahat*sqrt(1/n + xbar^2/sxx)
-seb1 <- sigmahat/sxx
+seb1 <- sigmahat/sqrt(sxx)
 t0 <- b0hat/seb0
 t1 <- b1hat/seb1
 p0 <- 2*pt( -abs(t0), n - 2 )
