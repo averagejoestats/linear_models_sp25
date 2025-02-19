@@ -1,0 +1,88 @@
+---
+title: "SDS 439 - Homework 03"
+subtitle: "Due Feb 24, 1:00 pm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Weather Prediction
+
+This homework concerns hourly USCRN weather data. We studied the same dataset
+in the lecture, except aggregated to the daily level. I have saved the 2024
+hourly data in the github repository in "datasets/hourly_uscrn_weather_2024.csv"
+
+1. The response for our prediction model will be the Salem, MO data. Read in 
+   the data and make a plot
+   of the data against time. This will require you to calculate an "hours since midnight
+   on January 1st" variable. 
+   
+   Make another plot showing whatever interesting features you like, such as
+   relationships between the Salem data and the data from the other sites.
+
+```{r}
+```
+
+2. Our first task is to de-trend the data. Fit a model to the Salem, MO data
+   that accounts for both broad trends over the year and the small trends within
+   each day, that is, the fact that it tends to be cooler at night and warmer
+   in the morning.
+
+```{r}
+```
+
+3. Explore the fit of this model by plotting the fitted values over time, and
+by plotting the residuals against some other variables. Include at least two
+plots total for this question, and explain in words what you find.
+
+```{r}
+```
+
+4. Fit the same model to all the other sites, separately for each site. Then
+   add the resduals from these models to the data frame, with appropriate
+   column names.
+
+```{r}
+```
+
+
+5. Calculate the sample covariance matrix for the residuals, and the corresponding
+sample correlation matrix. Print out these two matrices and leave some short comments
+about them. Which pairs of sites are most highly correlated. Which least correlated?
+
+```{r}
+```
+
+6. As we did in class, using the residuals, add one-hour lagged value for each
+   site to the data frame. Double check that you have lined them up properly.
+
+```{r}
+```
+
+7. Do a linear regression of the Salem residuals on its own lagged value. Print out
+   the summary table, and comment on the results. What is the size of the error
+   from this model? How does the size of the error compare to the overall variation
+   in the residuals?
+
+```{r}
+```
+
+
+8. Perform a multiple linear regression of the Salem data on all of the lagged
+   values (including the Salem lagged value). What do you find? Do the answers
+   make sense given locations of the sites? Look at a map of the sites to help
+   you answer.
+
+```{r}
+```
+
+9. Bonus: Given all that you've done here, try to produce a better weather prediction
+   model for the Salem residuals. The only constraint is that your model can't
+   use any information from the current time's residuals, only data from prior
+   residuals.
+
+```{r}
+```
+
