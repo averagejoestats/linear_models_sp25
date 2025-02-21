@@ -104,6 +104,7 @@ summary( lm(m1$residuals ~ BGSgirls$HT9 ) )
 
 # what about leg circumference?
 summary( lm( HT18 ~ LG9, data = BGSgirls ) )  # maybe something there
+
 m4 <- lm(HT18 ~ HT9 + LG9, data = BGSgirls )
 summary(m4)
 
@@ -132,7 +133,8 @@ head(X)
 # regression calculations "by hand"
 y <- BGSgirls$HT18
 bhat <- solve( t(X) %*% X ) %*% t(X) %*% y
-m3$coefficients
+m4$coefficients
+bhat
 
 # matrix inverse times another matrix should be done like this
 bhat <- solve( t(X) %*% X, t(X) %*% y )
@@ -144,6 +146,8 @@ dim(P)
 # fitted values
 yhat <- X %*% bhat
 range( yhat - P %*% y )
+range( yhat - m4$fitted.values )
+
 
 # residuals
 resids <- y - yhat
@@ -159,6 +163,18 @@ se_Bhat <- sqrt( diag( var_Bhat ) )
 se_Bhat
 
 summary(m4)
+
+# there is a function for extracting covariance matrix from model
+vcov(m4)
+var_Bhat
+
+y[37]
+
+var_Bhat[2, 2]
+
+var_Bhat[ "HT9", "HT9" ] + 
+var_Bhat[ "LG9", "LG9" ] + 
+-2*var_Bhat[ "HT9", "LG9" ]
 
 
 
@@ -199,8 +215,8 @@ abline(m0)
 
 # first analysis - sine and cosine
 y <- ith$avgtemp
-ss <- sin( (ith$day_count)*2*pi/365 )
-cc <- cos( (ith$day_count)*2*pi/365 )
+ss <- sin( (ith$day_count)*2*pi/365.25 )
+cc <- cos( (ith$day_count)*2*pi/365.25 )
 m1 <- lm( y ~ ss + cc )
 lines( m1$fitted.values, col = "magenta", lwd = 2 ) # hey not bad!
 summary(m1)

@@ -23,14 +23,19 @@ hist( weather$salem, breaks = 100 )
 hist( weather$champaign, breaks = 100 )
 hist( weather$ithaca, breaks = 100 )
 
-plot( weather$date, weather$salem, type="l",  axes = FALSE, ylim = c(-20,90))
-
+# throws an error
+plot( 
+    weather$date, weather$salem, 
+    type="l",  axes = FALSE, ylim = c(-20,90)
+)
 class( weather$date )
 
 # change to date class
 weather$date <- as.Date( weather$date, "%Y-%m-%d" )
 
-plot( weather$date, weather$salem, type="l",  ylim = c(-20,90))
+par(mfrow=c(1,1))
+plot( weather$date, weather$salem, type="l",  
+      ylim = c(-20,90))
 lines( weather$date, weather$champaign, col = "magenta" )
 lines( weather$date, weather$ithaca, col = "blue" )
 
@@ -46,10 +51,12 @@ abline(0,1,col="magenta",lwd=2)
 # for convenience, let's shorten the time frame
 weather <- weather[ weather$date >= "2020-07-01", ]
 
+par(mfrow=c(1,1))
 plot( weather$date, weather$salem )
 
 # There's clearly a pattern over time, but regressing on time won't help
-weather$day_count <- as.numeric( weather$date - min(weather$date) )
+weather$day_count <- 
+    as.numeric( weather$date - min(weather$date) )
 head(weather)
 
 m0 <- lm( salem ~ day_count, data = weather ) 
@@ -67,8 +74,13 @@ weather$cos1 <- cos( (weather$day_count)*2*pi/365.25 )
 m1 <- lm( salem ~ sin1 + cos1, data = weather )
 summary(m1)
 
+m2 <- lm( salem ~ sin1 + cos1 + day_count, data = weather )
+summary(m2)
+
+
 summary(m0)$sigma
 summary(m1)$sigma
+summary(m2)$sigma
 
 # make a plot of data and fitted values
 plot( weather$salem )
@@ -87,14 +99,14 @@ lines( m1$fitted.values, col = "magenta", lwd = 2 )
 # even better, make a data frame with the fitted values
 head( weather )
 weather$m1_fitted_values <- NA
-weather[ names( m1$fitted.values ), "m1_fitted_values" ] <- m1$fitted.values
+weather[names(m1$fitted.values), "m1_fitted_values"] <- m1$fitted.values
 
 
-plot( m1_df$date, m1_df$salem )
-lines( m1_df$date, m1_df$fitted_values, col = "magenta", lwd = 2 )
+plot( weather$date, weather$salem )
+lines( weather$date, weather$m1_fitted_values, col = "magenta", lwd = 2 )
 
 # we should also look at the residuals
-plot( m1_df$date, m1_df$salem - m1_df$fitted_values )
+plot( weather$date, weather$salem - weather$m1_fitted_values )
 
 # let's do the same analysis for champaign and ithaca
 m2 <- lm( champaign ~ sin1 + cos1, data = weather )
