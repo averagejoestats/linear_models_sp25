@@ -77,7 +77,6 @@ summary(m1)
 m2 <- lm( salem ~ sin1 + cos1 + day_count, data = weather )
 summary(m2)
 
-
 summary(m0)$sigma
 summary(m1)$sigma
 summary(m2)$sigma
@@ -100,6 +99,7 @@ lines( m1$fitted.values, col = "magenta", lwd = 2 )
 head( weather )
 weather$m1_fitted_values <- NA
 weather[names(m1$fitted.values), "m1_fitted_values"] <- m1$fitted.values
+
 
 
 plot( weather$date, weather$salem )
