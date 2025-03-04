@@ -1,0 +1,158 @@
+---
+title: "SDS 439 - Homework 03"
+subtitle: "Due Feb 24, 1:00 pm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Weather Prediction
+
+This homework concerns hourly USCRN weather data. We studied the same dataset
+in the lecture, except aggregated to the daily level.
+
+1. The response for our prediction model will be the Salem, MO data. Read in 
+   the data and make a plot
+   of the data against time. This will require you to calculate an "hours since midnight
+   on January 1st" variable. 
+   
+   Make another plot showing whatever interesting features you like, such as
+   relationships between the Salem data and the data from the other sites.
+
+```{r}
+dat <- read.csv("../datasets/hourly_uscrn_weather_2024.csv")
+dat$date <- as.Date( dat$date )
+dat$time <- as.numeric( dat$date - min(dat$date) ) + dat$hour/24 
+head(dat)
+plot( dat$time, dat$Salem, type = "l", xlab = "Day of year", ylab = "Temperature (C)" )
+
+plot( dat$Salem, dat$Salem - dat$Joplin, xlab = "Salem Temperature", 
+      ylab = "Salem minus Joplin Temperature" )
+```
+
+2. Our first task is to de-trend the data. Fit a model to the Salem, MO data
+   that accounts for both broad trends over the year and the small trends within
+   each day, that is, the fact that it tends to be cooler at night and warmer
+   in the morning.
+
+```{r}
+# there are various ways to do this, but a simple one is to fit sines and
+# cosines, one with a period of 365.25, and one with a period of 1 day. Getting
+# the period for within the day right will depend on whether they define time
+# as number of (fractional) days since Jan 1, or as number of hours since 
+dat$sin_day <- sin( dat$time*2*pi/365.25 )
+dat$cos_day <- cos( dat$time*2*pi/365.25 )
+dat$sin_hour <- sin( dat$time*2*pi/1 )
+dat$cos_hour <- cos( dat$time*2*pi/1 )
+m1 <- lm( Salem ~ sin_day + cos_day + sin_hour + cos_hour, data = dat )
+summary(m1)
+```
+
+3. Explore the fit of this model by plotting the fitted values over time, and
+by plotting the residuals against some other variables. Include at least two
+plots total for this question, and explain in words what you find.
+
+```{r}
+# There are various ways to do
+# this, but they should account for the fact that m1$residuals skips the
+# missing values, so to line it up with time properly, you need to do 
+# something like the below. 
+dat$Salem_resids <- NA
+dat[ names(m1$residuals), "Salem_resids" ] <- m1$residuals
+plot( dat$time, dat$Salem_resids, xlab = "Day of Year", ylab = "Salem Residuals", type = "l" )
+dat$Salem_fitted <- dat$Salem - dat$Salem_resids
+plot( dat$time, dat$Salem_fitted, type = "l", lwd = 0.5, xlab = "Day of Year",
+      ylab = "Fitted Values")
+```
+
+4. Fit the same model to all the other sites, separately for each site. Then
+   add the resduals from these models to the data frame, with appropriate
+   column names.
+
+```{r}
+sites <- c("Champaign","Manhattan","Batesville","Joplin","Chillicothe","Ithaca")
+for(k in 1:length(sites)){
+mod <- paste( sites[k], "~", "sin_day + cos_day + sin_hour + cos_hour" )
+m1 <- lm( as.formula(mod), data = dat )
+this_name <- paste0(sites[k],"_","resids")
+dat[[ this_name ]] <- NA
+dat[ names(m1$residuals), this_name ] <- m1$residuals
+}
+head(dat)
+
+
+```
+
+
+5. Calculate the sample covariance matrix for the residuals, and the corresponding
+sample correlation matrix. Print out these two matrices and leave some short comments
+about them. Which pairs of sites are most highly correlated. Which least correlated?
+
+```{r}
+covmat <- cov( dat[ , c("Salem_resids","Champaign_resids","Manhattan_resids","Batesville_resids","Joplin_resids","Chillicothe_resids","Ithaca_resids")], use = "complete.obs" )
+print(covmat)
+cormat <- cov2cor(covmat)
+print(round(cormat,2))
+```
+
+6. As we did in class, using the residuals, add one-hour lagged value for each
+   site to the data frame. Double check that you have lined them up properly.
+
+```{r}
+dat$Salem_resids1 <- NA
+dat$Champaign_resids1 <- NA
+dat$Manhattan_resids1 <- NA
+dat$Batesville_resids1 <- NA
+dat$Joplin_resids1 <- NA
+dat$Chillicothe_resids1 <- NA
+dat$Ithaca_resids1 <- NA
+n <- nrow(dat)
+
+dat$Salem_resids1[ 2:(n) ] <- dat$Salem_resids[1:(n-1)]
+dat$Champaign_resids1[ 2:(n) ] <- dat$Champaign_resids[1:(n-1)]
+dat$Manhattan_resids1[ 2:(n) ] <- dat$Manhattan_resids[1:(n-1)]
+dat$Batesville_resids1[ 2:(n) ] <- dat$Batesville_resids[1:(n-1)]
+dat$Joplin_resids1[ 2:(n) ] <- dat$Joplin_resids[1:(n-1)]
+dat$Chillicothe_resids1[ 2:(n) ] <- dat$Chillicothe_resids[1:(n-1)]
+dat$Ithaca_resids1[ 2:(n) ] <- dat$Ithaca_resids[1:(n-1)]
+```
+
+7. Do a linear regression of the Salem residuals on its own lagged value. Print out
+   the summary table, and comment on the results. What is the size of the error
+   from this model? How does the size of the error compare to the overall variation
+   in the residuals?
+
+```{r}
+m1 <- lm( Salem_resids ~ Salem_resids1, data = dat )
+summary(m1)
+```
+
+
+8. Perform a multiple linear regression of the Salem data on all of the lagged
+   values (including the Salem lagged value). What do you find? Do the answers
+   make sense given locations of the sites? Look at a map of the sites to help
+   you answer.
+
+```{r}
+m1 <- lm( Salem_resids ~ Salem_resids1 + Manhattan_resids1 + Batesville_resids1 + Champaign_resids1 + Joplin_resids1 + Chillicothe_resids1 + Ithaca_resids1, data = dat )
+summary(m1)
+```
+
+9. Bonus: Given all that you've done here, try to produce a better weather prediction
+   model for the Salem residuals. The only constraint is that your model can't
+   use any information from the current time's residuals, only data from prior
+   residuals.
+
+```{r}
+# If you get the residual standard error below 1.1,
+# that's pretty good. 
+dat$Salem_resids2 <- NA
+dat$Salem_resids2[ 3:(n) ] <- dat$Salem_resids[1:(n-2)]
+m1 <- lm( Salem_resids ~ Salem_resids1 + Salem_resids2 + Manhattan_resids1 + Batesville_resids1 + Champaign_resids1 + Joplin_resids1 + Chillicothe_resids1 + Ithaca_resids1, data = dat )
+summary(m1)
+
+```
+
+
