@@ -1,0 +1,87 @@
+---
+title: "SDS 439 - Homework 04"
+subtitle: "Due Mar 17, 1:00 pm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pinewood Derby
+
+This homework concerns analysis of times from the finals of a Pinewood Derby
+contest. Pinewood Derby is a competition in which people, usually children with
+the help of their parents, build cars from a kit that consists of a block of 
+wood and wheels. The races take place on an inclined track in a series
+of heats that pit 6 cars at a time against each other.
+
+The data are real, but the names of the children have been replaced with
+fake names. You can find it in `datasets/pinewood_derby.csv`
+
+The final was contested in order to determine which racer had the fastest
+car. We are going to analyze the data with this goal in mind, using the
+times as the response, and racer as a factor covariate. 
+
+1. The first thing you should do in a data analysis is to try to find a way to 
+look at the data. Read in the data and make one or two informative plots. Remember
+to label your axes, use legends where appropriate, use informative plotting
+symbols. Try to get multiple aspects of the data into your plot. Also, make
+sure your plot looks nice when knitted to a pdf.
+
+```{r}
+```
+
+2. To get started, create the design matrix $X$ for the one-factor model that has 
+racer as the factor covariate. Create the full design matrix without dropping
+any columns. Print out the first twelve rows.
+
+```{r}
+```
+
+3. Calculate $X^T X$ and demonstrate that its inverse does not exist. This is 
+actually a little tricky because the markdown will not knit if the code has
+an error. You can circumvent this by putting the problematic code inside of
+the `try` function, or you can use your matrix algebra knowledge to find a way
+to show that the inverse does not exist (e.g. look at eigenvalues).
+
+```{r}
+```
+
+4. Fit a model to the race times, using racer as the factor covariate. Print out
+the summary of the model fit.
+
+```{r}
+```
+
+5. Which column did R drop and how do you know?
+
+```{r}
+```
+
+6. Using words, supported by code if necessary, answer the following questions
+about the results:
+
+(a) How do you interpret the intercept?
+
+(b) How do you interpret the racerBess coefficient and what can you conclude
+    from the t-test for the racerBess coefficient?
+    
+(c) What is the size of the error after accounting for racer, and how does
+    it compare in magnitude to the sizes of the racer effects?
+    
+(d) Which racer is estimated to have the fastest car?
+
+(e) Which racer is estimated to have the second fastest car?
+
+(f) Do we have enough evidence to say that the fastest estimated car is 
+    faster than the second-fastest? Do a t-test to answer this question.
+    
+```{r}
+```
+
+7. What else would you want to do in order to investigate which racers have
+   the fastest cars? (You don't need to do it, just give some ideas)
+   
+```{r}
+```
