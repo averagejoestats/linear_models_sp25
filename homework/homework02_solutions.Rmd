@@ -1,0 +1,161 @@
+---
+title: "SDS 439 - Homework 02"
+subtitle: "Due Feb 10, 1:00 pm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Minnesota Water Usage
+
+This homework concerns analysis of the minnesota water dataset, which is included
+in the R package for the textbook "Applied Linear Regression" by Sanford Weisberg.
+The dataset has municipal and agricultural water usage data for 24 years, 
+along with agricultural and municipal precipitation data for the same time period.
+We are interested in studying how water usage is changing over time.
+
+The dataset is located in the course repository in the file `datasets/mn_water.csv`.
+
+A thorough description of the data can be found on page 32 of the `alr4` documentation:
+[https://cran.r-project.org/web/packages/alr4/alr4.pdf](https://cran.r-project.org/web/packages/alr4/alr4.pdf)
+
+1. Read in the dataset and print out the first six rows.
+
+```{r}
+water <- read.csv("../datasets/mn_water.csv")
+head( water )
+```
+
+2. You should try to start your analyses by looking at the data, so you have an idea
+of what to expect from your analysis. Make 4 informative plots of the data, to familiarize yourself with the major features of the data. Use good plotting practice, labeling
+your axes, using legends when appropriate, etc. A good plot should show several
+aspects of the data, without overwhelming you.
+
+```{r}
+plot( water$year, water$allUse, ylim = c(0, 300) )
+points( water$year, water$muniUse, col = "purple" )
+points( water$year, water$irrUse, col = "darkgreen" )
+```
+
+3. Use `lm` to regress the total water usage on the municipal usage and the
+irrigation usage, and print out the summary table. What do the results tell
+you about the relationship between these 3 variables?
+
+```{r}
+summary( lm( allUse ~ muniUse + irrUse, data = water ) )
+```
+
+4. Let's first study the municipal water usage to understand how it is
+changing over time. Make a plot of municipal water usage over time.
+```{r}
+plot( water$year, water$muniUse, xlab = "Year", ylab = "Muni. Water Usage" )
+```
+
+5. Regress municipal water usage on year. Print the results and answer the following 
+questions: How do you interpret the slope? How do you interpret the intercept?
+
+```{r}
+m1 <- lm( muniUse ~ year, data = water )
+summary(m1)
+
+# Slope is the estimated expected in crease in water usage each year
+# Intercept is the estimated water usage in year 0!
+```
+
+
+6. To facilitate interpretation of the intercept, create a new variable 
+counting the years since 1988. Then regress municipal use on your new
+variable and print the results. What is the interpretation of this intercept
+in this model? Verify that the intercept for this model is
+equal to the fitted value for 1988 from the previous model.
+
+```{r}
+water$years_since_1988 <- water$year - 1988
+summary( lm( muniUse ~ years_since_1988, data = water ) )
+m1$fitted.values[24]
+
+# Now the intercept is the estimated expect water usage in year 1988.
+```
+
+7. Perhaps the changes in municipal water usage can be explained by changes in 
+municipal population. Regress municipal water use *per person* on years since
+1988. BUT make sure to use an appropriate unit for the response (billions of
+gallons per person is hard to interpret). Make a plot with the data and 
+the regression line, and summarize your results in words.
+
+```{r}
+water$muni_gallons_per_person <- water$muniUse*1e9/water$muniPop
+m1 <- lm( muni_gallons_per_person ~ years_since_1988, data = water )
+plot( water$years_since_1988, water$muni_gallons_per_person )
+abline(m1)
+summary(m1)
+
+# this analysis converts the response to gallons per person. We can see from
+# the plot and the fit that water usage in terms of gallons per person
+# is not changing much overall, though the pattern is interesting. There were
+# two early years with high usage, then two later years with low usage.
+# Otherwise, usage was increasing in the middle.
+```
+
+8. Let's pivot to the irrigation usage. Make two plots of the irrigation
+usage, one against year, and one against agricultural precipitation
+
+```{r}
+plot( water$year, water$irrUse )
+plot( water$agPrecip, water$irrUse )
+```
+
+
+9. Perform a multiple regression of irrigation usage on years since 1988 and 
+agricultural precipitation. Perform the following steps: (1) Write out the model
+in mathematical notation (like we do in class), (2) Print the summary table, (3) provide an interpretation of each of the 3 regression coefficients.
+
+(1) $Y_i = b_0 + b_1 x_{i1} + b_2 x_{i2} + \varepsilon_i$
+
+```{r}
+# (2)
+m2 <- lm( irrUse ~ agPrecip + years_since_1988, data = water )
+summary(m2)
+```
+
+(3) The intercept is the expected usage in 1988 when there is 0 precipitation. 
+The agPrecip coefficient is the expected change in water usage when the
+precipitation increases by 1. The years_since_1988 coefficient is the
+expected change in water usage each year.
+
+10. What do the regression results tell us about how irrigation usage is 
+changing over time?
+
+It seems to be increasing over time, after controlling for precipitation.
+
+11. Provide an estimate of how much water would have been used in 2012
+if the precipitation were 12 inches. Write down the estimate in terms of
+your model parameter estimates and provide the numerical value. Can you provide a standard error for your estimate?
+
+```{r}
+vv <- vcov( m2 )
+est <- m2$coefficients[1] + 12*m2$coefficients[2] + (2012-1988)*m2$coefficients[3]
+est
+x <- c(1, 12, (2012-1988))
+se <- sqrt( t(x) %*% vv %*% x )
+se
+```
+
+
+12. Provide an estimate of how much less water would be used for irrigation
+in a rainy year (say 16 inches) versus in a dry year (say 8 inches). Write down
+the estimate in terms of your model parameters and provide the numerical
+value. Can you provide a standard error for your estimate?
+
+```{r}
+est <- (16-8)*m2$coefficients[2]
+x <- c(0, 16-8, 0)
+se <- sqrt( t(x) %*% vv %*% x )
+est
+se
+```
+
+
+
