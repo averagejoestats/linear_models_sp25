@@ -3,6 +3,7 @@
 load("../datasets/stlcounty_sales.RData")
 ls()
 
+class(dat)
 head(dat)
 nrow(dat)
 length( unique( dat$locator_number ) )
@@ -12,6 +13,7 @@ table( dat$zip_code )
 table( dat$exterior_wall_type )
 table( dat$sale_validity )
 table( dat$architectural_style )
+table( dat$architectural_style, dat$story_height )
 
 # locator number
 table( dat$locator_number )
@@ -23,10 +25,11 @@ dat[ dat$locator_number %in% names( tab[ tab == 2 ] ), ]
 
 # make a plot to look at the data
 plot( dat$total_living_area, dat$price_per_sq_ft )
+plot( dat$total_living_area, dat$price_per_sq_ft, cex = 0.5 )
 plot( log10(dat$total_living_area), dat$price_per_sq_ft )
 
 # look at the outliers
-dat[ dat$price_per_sq_ft < 50, ] # this one is probably an error
+dat[ dat$price_per_sq_ft < 50, ] # this one was a tear-down
 dat[ "9708", c("sale_price", "price_per_sq_ft")] <- NA
 
 dat[ dat$total_living_area > 15000, ] # this one is probably real
@@ -34,12 +37,18 @@ dat[ dat$total_living_area > 15000, ] # this one is probably real
 dat[ dat$price_per_sq_ft > 600, ] # couple of them are suspect
 
 # zip code analysis
-tapply( dat$sale_price, dat$zip_code, mean )
-cbind( tapply( dat$sale_price, dat$zip_code, mean ) )
+tapply( dat$sale_price, dat$zip_code, mean, na.rm = TRUE )
+cbind( tapply( dat$sale_price, dat$zip_code, mean, na.rm = TRUE ) )
 
 library("dplyr")
-dat |> group_by(zip_code) |> summarize( avg = mean(sale_price) )
+dat |> group_by(zip_code) |> summarize( avg = mean(sale_price, na.rm = TRUE) )
 dat |> group_by(zip_code) |> summarize( avg = mean(price_per_sq_ft) )
+
+dat |> group_by(zip_code) |> 
+    summarize( 
+        avg = mean(price_per_sq_ft, na.rm = TRUE),
+        sd  = sd(  price_per_sq_ft, na.rm = TRUE)
+    )
 
 # factor model
 m1 <- lm( price_per_sq_ft ~ zip_code, data = dat )
@@ -98,6 +107,11 @@ est
 # estimated standard error
 se <- sqrt( t(d) %*% vcov(m2) %*% d )
 se
+
+# tstat
+tstat <- est/se
+pval <- 2*pt( -abs(tstat), df = m2$df.residual )
+pval
 
 # you can also relevel the factor
 typeof( dat$zip_code )
