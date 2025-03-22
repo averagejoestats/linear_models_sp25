@@ -41,10 +41,27 @@ abline(
     m3$coefficients["(Intercept)"] + m3$coefficients["zip_code63130"], 
     m3$coefficients["log(total_living_area)"], col = "blue"
 )
-legend( 
-    "topleft", legend = c("63105","63130"), 
-    lwd = 1, col = c("magenta","blue") 
+abline( 
+    m3$coefficients["(Intercept)"] + m3$coefficients["zip_code63122"], 
+    m3$coefficients["log(total_living_area)"], col = "green"
 )
+legend( 
+    "topleft", legend = c("63105","63130","63122"), 
+    lwd = 1, col = c("magenta","blue","green") 
+)
+
+# what is the slope when you don't include zip code?
+m3a <- lm( log(sale_price) ~ log(total_living_area), data = dat )
+summary(m3)
+summary(m3a)
+# why is it larger?
+
+# add the line
+abline( 
+    m3a$coefficients["(Intercept)"], 
+    m3a$coefficients["log(total_living_area)"], col = "red"
+)
+
 
 # digression: beware of normalization effect
 # create a random predictor
