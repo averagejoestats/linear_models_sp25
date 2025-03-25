@@ -1,0 +1,159 @@
+---
+title: "SDS 439 - Homework 04"
+subtitle: "Due Mar 17, 1:00 pm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pinewood Derby
+
+This homework concerns analysis of times from the finals of a Pinewood Derby
+contest. Pinewood Derby is a competition in which people, usually children with
+the help of their parents, build cars from a kit that consists of a block of 
+wood and wheels. The races take place on an inclined track in a series
+of heats that pit 6 cars at a time against each other.
+
+The data are real, but the names of the children have been replaced with
+fake names. You can find it in `datasets/pinewood_derby.csv`
+
+The final was contested in order to determine which racer had the fastest
+car. We are going to analyze the data with this goal in mind, using the
+times as the response, and racer as a factor covariate. 
+
+1. The first thing you should do in a data analysis is to try to find a way to 
+look at the data. Read in the data and make one or two informative plots. Remember
+to label your axes, use legends where appropriate, use informative plotting
+symbols. Try to get multiple aspects of the data into your plot. Also, make
+sure your plot looks nice when knitted to a pdf.
+
+```{r}
+derby <- read.csv("../datasets/pinewood_derby.csv")
+head(derby)
+plot( derby$heat + derby$lane/8, derby$time, axes = FALSE, xlab = "Heat", ylab = "Time" )
+axis(1, at = 1:12, labels = rep("",12 ) )
+axis(1, at = (1:12) + 0.5, labels = 1:12, lwd.ticks = 0 )
+box()
+axis(2)
+for(j in 1:13) abline( v = j )
+
+plot( as.numeric(as.factor(derby$racer)) + derby$heat/15, derby$time, axes = FALSE, xlab = "Racer", ylab = "Time" )
+axis(1, at = 1:12, labels = rep("",12 ) )
+axis(1, at = (1:12) + 0.5, labels = levels(as.factor(derby$racer)), lwd.ticks = 0, cex.axis =0.7)
+box()
+axis(2)
+for(j in 1:13) abline( v = j )
+
+```
+
+2. To get started, create the design matrix $X$ for the one-factor model that has 
+racer as the factor covariate. Create the full design matrix without dropping
+any columns. Print out the first twelve rows.
+
+```{r}
+X <- cbind( rep(1,nrow(derby)), model.matrix( ~ racer -1, data = derby ) )
+X[1:12,]
+```
+
+3. Calculate $X^T X$ and demonstrate that its inverse does not exist. This is 
+actually a little tricky because the markdown will not knit if the code has
+an error. You can circumvent this by putting the problematic code inside of
+the `try` function, or you can use your matrix algebra knowledge to find a way
+to show that the inverse does not exist (e.g. look at eigenvalues).
+
+```{r}
+XtX <- t(X) %*% X
+try( solve(XtX) )
+ee <- eigen(XtX)
+min(ee$values)
+```
+
+4. Fit a model to the race times, using racer as the factor covariate. Print out
+the summary of the model fit.
+
+```{r}
+head(derby)
+m1 <- lm( time ~ racer, data = derby)
+summary(m1)
+```
+
+5. Which column did R drop and how do you know?
+
+```{r}
+# R removed the column for "Anne". You can tell by looking at which name
+# is missing from the coefficients.
+m1$coefficients
+sort( unique( derby$racer ) )
+```
+
+6. Using words, supported by code if necessary, answer the following questions
+about the results:
+
+(a) How do you interpret the intercept?
+
+(b) How do you interpret the racerBess coefficient and what can you conclude
+    from the t-test for the racerBess coefficient?
+    
+(c) What is the size of the error after accounting for racer, and how does
+    it compare in magnitude to the sizes of the racer effects?
+    
+(d) Which racer is estimated to have the fastest car?
+
+(e) Which racer is estimated to have the second fastest car?
+
+(f) Do we have enough evidence to say that the fastest estimated car is 
+    faster than the second-fastest? Do a t-test to answer this question.
+    
+```{r}
+# Intercept is the estimated expected time for Anne, since R dropped the column for Anne
+
+# racerBess is the estimated expected time for Bess minus the estimated expected time
+# for Anne (the reference racer). Since the coefficient is positive, and the 
+# p-value for this t-test is very small, we can conclude that Bess has a slower
+# car than Anne.
+
+# sigmahat = 0.01559. This is roughly the size of some of the differences in 
+# estimated expected time. 
+
+# Gwen is has the most negative coefficient, so it has the fastest estimated
+# expected time
+
+# The second most negative coefficient belongs to Suzy
+
+# We can get the estimated difference between Gwen and Suzy, using the following
+# linear combination
+d <- rep(0, length(m1$coefficients) )
+d[ c(5,12) ] <- c(1,-1)
+# make sure they line up:
+cbind( m1$coefficients, d )
+
+# calculate the difference
+est <- t(d) %*% m1$coefficients
+est
+
+# calculate the standard error:
+se <- sqrt( t(d) %*% vcov(m1) %*% d )
+se
+
+# calculate the t-statistic and p-value
+tstat <- est/se
+tstat
+pval <- 2*pt( -abs(tstat), m1$df.residual )
+pval
+
+# the pvalue is 0.69, which means we don't have enough evidence to reject the
+# hypothesis that Gwen and Suzy has cars with the same speed.
+
+```
+
+7. What else would you want to do in order to investigate which racers have
+   the fastest cars? (You don't need to do it, just give some ideas)
+   
+```{r}
+# there are various things to consider, including accounting for the speed of
+# the lanes, accounting for how fast or slow different heats were,
+# considering the effects of the outliers. Since we can't detect a difference
+# between the fastest cars, we might want to run more heats.
+```
