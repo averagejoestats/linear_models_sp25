@@ -99,8 +99,8 @@ summary(m4)
 m4$xlevels
 
 # get the table of estimated expected values
-cj <- c(0, m4$coefficients[2:12])
-dk <- c(0,m4$coefficients[13:15])
+cj <- c( zip_code63105 = 0, m4$coefficients[2:12])
+dk <- c(Crawl = 0,m4$coefficients[13:15])
 
 cj
 dk
@@ -130,12 +130,12 @@ m5 <- lm(
     zip_code + log(total_living_area) + basement +
     total_acres + log(total_acres) + 
     bedrooms + total_rooms + full_baths +
-    half_baths, data = dat
+    half_baths + I(year_built-2000), data = dat
 )
 summary(m5)
 
 # residual plot
-plot( m4$fitted.values, m4$residuals )
+plot( m5$fitted.values, m5$residuals )
 
 # build in model plotting function
 plot(m5)
@@ -161,11 +161,13 @@ crossprod( x4, m5$coefficients )
 m5$fitted.values["4"]
 # all the same
 
+predvar <- summary(m5)$sigma^2 + t(x4) %*% vcov(m5) %*% x4
+
+
 # quartiles
 q25 <- qnorm( 0.25, mean = fitval, sd = sqrt(predvar) )
 q75 <- qnorm( 0.75, mean = fitval, sd = sqrt(predvar) )
 
-predvar <- summary(m5)$sigma^2 + t(x4) %*% vcov(m5) %*% x4
 
 # plot the density and the quartiles
 xx <- seq( 13.5, 15.5, by = 0.01 )
