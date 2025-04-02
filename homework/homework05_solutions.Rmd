@@ -1,0 +1,137 @@
+---
+title: "SDS 439 - Homework 05"
+subtitle: "Due Mar 31, 1:00 pm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pinewood Derby Revisited
+
+We return to the pinewood derby data, but this time with more complex models
+at our disposal. 
+
+1. To refamiliarize yourself with the data, make one plot of the data, showing
+some of the major features. This may be a plot from the previous assignment, but
+see if you can improve it in some way.
+
+```{r}
+derby <- read.csv("../datasets/pinewood_derby.csv")
+head(derby)
+plot( derby$heat + derby$lane/8, derby$time, axes = FALSE, xlab = "Heat", ylab = "Time" )
+axis(1, at = 1:12, labels = rep("",12 ) )
+axis(1, at = (1:12) + 0.5, labels = 1:12, lwd.ticks = 0 )
+box()
+axis(2)
+for(j in 1:13) abline( v = j )
+
+plot( as.numeric(as.factor(derby$racer)) + derby$heat/15, derby$time, axes = FALSE, xlab = "Racer", ylab = "Time" )
+axis(1, at = 1:12, labels = rep("",12 ) )
+axis(1, at = (1:12) + 0.5, labels = levels(as.factor(derby$racer)), lwd.ticks = 0, cex.axis =0.7)
+box()
+axis(2)
+for(j in 1:13) abline( v = j )
+
+```
+
+2. The official winner of the competition was determined by which racer had
+the lowest average time over their six runs. Use both `tapply` and 
+`dplyr`'s `group_by` and `summarize` functions to calculate the average
+times for each racer.
+
+```{r}
+tapply( derby$time, derby$racer, mean )
+library("dplyr")
+derby |> group_by( racer ) |> summarize( avg = mean( time ) )
+```
+
+3. Convert the racer column to a factor, and set its reference level to be the
+racer with the fastest average time. Then fit the one-factor model in racer
+and print the results. If you do it correctly, all of the coefficients should
+be positive. Explain why.
+
+```{r}
+derby$racer <- as.factor( derby$racer )
+derby$racer <- relevel( derby$racer, ref = "Gwen" )
+m1 <- lm( time ~ racer, data = derby )
+summary(m1)
+# The intercept is the estimated average time for Gwen, which has to be a 
+# positive number. The other coefficients are differences between each
+# racer and Gwen. Since Gwen has the fastest car, these differences should
+# be positive.
+```
+
+4. Show that the estimated expected time for each racer is equal to the 
+sample averages that you computed in a previous question.
+
+```{r}
+x1 <- tapply( derby$time, derby$racer, mean )
+x2 <- rep(NA, length(x1))
+names(x2) <- names(x1)
+x2["Gwen"] <- m1$coefficients["(Intercept)"]
+for(j in 2:length(x2)){
+    nm <- names(x2)[j]
+    x2[ names(x2)[j] ] <- m1$coefficients["(Intercept)"] + m1$coefficients[ paste0("racer",nm) ]
+}
+data.frame( x1, x2, diff = x2 - x1 )
+```
+
+5. Now fit a two-factor model to the times, with racer and lane as the two factors. Keep 
+the fastest racer as the reference level and print the summary. 
+How do you interpret the intercept in this model? Note that the intercept 
+is a slightly different number and has a 
+slightly different interpretation than that in the previous model.
+
+```{r}
+derby$lane <- as.factor(derby$lane)
+m2 <- lm( time ~ racer + lane, data = derby )
+summary(m2)
+# The intercept is the estimated expected time for Gwen in lane 1, since
+# Gwen and lane 1 are the reference levels for the two factors.
+```
+
+6. Show that the coefficients for the racers in the two-factor model are
+exactly the same as they were in the one-factor model. This means that, after
+accounting for lane, the relative differences among the racers is estimated
+to be the same. This is because the structure of the pinewood derby is set up
+so that each racer appears in each lane exactly once. If you take an experimental
+design course, you will learn that this is an example of a balanced experiment
+with respect to racer and lane. In a balanced experiment, the estimated effects
+in a two-factor model can be calculated by taking differences of simple averages.
+
+```{r}
+range( m1$coefficients[2:12] - m2$coefficients[2:12] )
+```
+
+7. Use the `anova` function to perform an F-test for whether `lane` significantly
+improves the model and interpret the results. 
+The easiest way to do this is to put both the reduced model
+and the full model into the `anova` function as arguments.
+    
+```{r}
+anova(m1,m2)
+# The p-value is 0.045, so we have moderate evidence that there are
+# differences among the lanes.
+```
+
+8. Now fit a three-factor additive model with racer, lane, and heat as the three
+factors and show that the coefficients for the racers change. Why do you think 
+this happens?  
+  
+```{r}
+derby$heat <- as.factor(derby$heat)
+m3 <- lm( time ~ racer + lane + heat, data = derby )
+summary(m3)
+range( m1$coefficients[2:12] - m3$coefficients[2:12] )
+# The experiment is balanced with respect to racer and lane, but it's not
+# balanced with respect to racer and heat, since there are 12 racers
+# but only 6 compete in each heat. If one of the heats runs particularly slow
+# (due to wind or some other cause), then the 6 racers in that heat will tend to
+# have slower average times than the 6 who didn't race in that heat. The model
+# with racer, lane, and heat attempts to account for this possibility. Luckily,
+# slow (or fast) heats don't appear to be an issue, since Gwen still comes out
+# on top after accounting for heat, which you can see by noting that all of
+# the racer coefficients are still positive, though slightly different than before.
+```
