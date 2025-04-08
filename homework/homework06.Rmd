@@ -1,0 +1,59 @@
+---
+title: "SDS 439 - Homework 06"
+subtitle: "Due April 14, 1:00 pm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Batteries
+
+We have a dataset measuring the lifetimes of three different battery types
+at three different temperatures. At each type x temperature combination,
+there are four independent observations. 
+
+1. Load the data and make an informative plot, showing information about the 
+   type, temperature, and lifetimes. Hint: to load the data, use the
+   `read.table` function, as this particular dataset is tab-separated
+   instead of commma-separated.
+   
+
+2. Fit the two-factor additive model, treating lifetime as the response,
+   and type and temperature as the two factors, and print the table.
+   
+
+3. Give a brief description of why each parameter estimate "makes sense".
+
+
+4. Fit the two-factor interaction model and print the summary table
+
+
+5. The largest interaction term is between type 3 and temperature 70. Give
+   an interpretation for this term and explain why it makes sense that
+   this is the largest interaction.
+   
+
+6. Now fit a factor numeric interaction model, where type is the factor, and
+   temperature is a numeric covariate, and print the model summary
+   
+
+7. What are the slopes for the three types, and which type has the worst
+   performance with respect to increasing temperature?
+   
+
+8. The factor-factor interaction model is different from the factor-numeric
+   interaction model. Explain how they are different and which of the two
+   models is more flexible.
+   
+
+9. Fit a model that has type as factor, and temperature as numeric,
+   but include linear and quadratic effects of temperature, and the linear
+   and quadratic terms both interact with type. Print the model summary.
+   
+
+10. Which of the previous models is this model equivalant to? If you've 
+    implemented it correctly, it should be equivalent to one of the
+    other models you've fit.
+
