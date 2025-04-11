@@ -142,7 +142,7 @@ summary(m7)
 m7$preds <- predict(m7, grid)
 
 par(mfrow=c(2,3))
-for( mm in list(m1,m2,m4,m5,m6,m7) ){
+for( mm in list(m1,m3,m4,m5,m6,m7) ){
     print(mm)
     z <- matrix(mm$preds,ngrid,ngrid)
     fields::image.plot(doy_grid, temp7a_grid, z)
