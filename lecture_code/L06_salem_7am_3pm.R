@@ -19,7 +19,7 @@ plot(temps$doy, temps$temp3p, cex = 0.3, pch = 16 )
 # install.packages("fields")
 ii <- !( is.na( temps$temp3p ) | is.na( temps$temp7a ) )
 fields::quilt.plot( 
-    temps$temp7a[ii], temps$doy[ii], temps$temp3p[ii],
+    temps$doy[ii], temps$temp7a[ii], temps$temp3p[ii],
     xlab = "7am temp (C)", ylab = "Day of Year",
     main = "3pm Temp, by 7am Temp and Day of Year"
 )
@@ -42,9 +42,13 @@ summary(m3)
 # sin and cosine
 temps$sin_day <- sin( temps$doy*2*pi/365.25 )
 temps$cos_day <- cos( temps$doy*2*pi/365.25 )
+temps$sin_day2 <- sin( temps$doy*4*pi/365.25 )
+temps$cos_day2 <- cos( temps$doy*4*pi/365.25 )
 m4 <- lm( temp3p ~ doy + sin_day + cos_day, data=temps[ii,] )
 summary(m4)
 # 6.017
+m4a <- lm( temp3p ~ doy + sin_day + cos_day + sin_day2 + cos_day2, data=temps[ii,] )
+summary(m4a)
 
 # sin and cosine and 7am temp
 temps$sin_day <- sin( temps$doy*2*pi/365.25 )
@@ -98,66 +102,53 @@ summary( lm( temp3p ~ temp7a, data = temps[iiNov,] ) )
 # what model would you fit to estimate long term trends?
 
 
+# try a full quadratic model in doy and 7am temp
+m6 <- lm( temp3p ~ temp7a*doy + I(temp7a^2) + I(doy^2), data = temps )
+summary(m6)
 
-# 
-# # plot the fitted models
-# ngrid <- 50
-# temp_grid <- seq(0,25,length.out=ngrid)
-# day_grid <- seq(120,270,length.out=ngrid)
-# temp_day_grid <- expand.grid(temp_grid, day_grid)
-# temp_day_grid[,3] <- temp_day_grid[,1]*temp_day_grid[,2]
-# temp_day_grid[,4] <- temp_day_grid[,1]*temp_day_grid[,1]
-# temp_day_grid[,5] <- temp_day_grid[,2]*temp_day_grid[,2]
-# onevec <- rep(1,nrow(temp_day_grid))
-# zlims <- c(10,30)
-# 
-# par(mfrow=c(1,1))
-# # temp only
-# df <- as.matrix(cbind(onevec, temp_day_grid[,c(1)]))
-# mod <- m1
-# fit3p <- c( df %*% mod$coefficients )
-# fields::image.plot( temp_grid, day_grid, matrix(fit3p, ngrid, ngrid),
-#     zlim = zlims)
-# mtext("linear temp",side=3,line=1)
-# 
-# # doy only
-# df <- as.matrix(cbind(onevec, temp_day_grid[,c(2)]))
-# mod <- m2
-# fit3p <- c( df %*% mod$coefficients )
-# fields::image.plot( temp_grid, day_grid, matrix(fit3p, ngrid, ngrid),
-#     zlim = zlims)
-# mtext("linear doy",side=3,line=1)
-# 
-# # additive 
-# df <- as.matrix(cbind(onevec, temp_day_grid[,c(1,2)]))
-# mod <- m3
-# fit3p <- c( df %*% mod$coefficients )
-# fields::image.plot( temp_grid, day_grid, matrix(fit3p, ngrid, ngrid),
-#     zlim = zlims)
-# mtext("additive",side=3,line=1)
-# 
-# # interaction
-# df <- as.matrix(cbind(onevec, temp_day_grid[,c(1,2,3)]))
-# mod <- m4
-# fit3p <- c( df %*% mod$coefficients )
-# fields::image.plot( temp_grid, day_grid, matrix(fit3p, ngrid, ngrid),
-#     zlim = zlims)
-# mtext("interaction",side=3,line=0.5)
-# 
-# # additive quadratic
-# df <- as.matrix(cbind(onevec, temp_day_grid[,c(1,2,4,5)]))
-# mod <- m5
-# fit3p <- c( df %*% mod$coefficients )
-# fields::image.plot( temp_grid, day_grid, matrix(fit3p, ngrid, ngrid),
-#     zlim = zlims)
-# mtext("additive quadratic",side=3,line=0.5)
-# 
-# # full quadratic
-# df <- as.matrix(cbind(onevec, temp_day_grid[,c(1,2,4,5,3)]))
-# mod <- m6
-# fit3p <- c( df %*% mod$coefficients )
-# fields::image.plot( temp_grid, day_grid, matrix(fit3p, ngrid, ngrid),
-#     zlim = zlims)
-# mtext("full quad",side=3,line=0.5)
-# 
-# 
+
+# plot the fitted values
+ngrid <- 50
+temp7a_grid <- seq(0,25,length.out=ngrid)
+doy_grid <- seq(1,366, length.out=ngrid)
+grid <- expand.grid( doy = doy_grid, temp7a = temp7a_grid )
+grid$sin_day <- sin(2*pi*grid$doy/365.25)
+grid$cos_day <- cos(2*pi*grid$doy/365.25)
+
+m1$preds <- predict(m1, grid)
+m2$preds <- predict(m2, grid)
+m3$preds <- predict(m3, grid)
+m4$preds <- predict(m4, grid)
+m5$preds <- predict(m5, grid)
+m6$preds <- predict(m6, grid)
+
+par(mfrow=c(2,3))
+for( mm in list(m1,m2,m3,m4,m5,m6) ){
+    print(mm)
+    z <- matrix(mm$preds,ngrid,ngrid)
+    fields::image.plot(doy_grid, temp7a_grid, z)
+    points(temps$doy, temps$temp7a, col = "gray", cex = 0.2, pch = 16 )
+    mtext(mm$call,3,line=1)
+}
+
+# sin day cos day interaction model?
+m7 <- lm( 
+    temp3p ~ temp7a*sin_day + temp7a*cos_day + 
+        I(temp7a^2*sin_day) + I(temp7a^2*cos_day),
+    data = temps 
+)
+summary(m7)
+
+m7$preds <- predict(m7, grid)
+
+par(mfrow=c(2,3))
+for( mm in list(m1,m2,m4,m5,m6,m7) ){
+    print(mm)
+    z <- matrix(mm$preds,ngrid,ngrid)
+    fields::image.plot(doy_grid, temp7a_grid, z)
+    points(temps$doy, temps$temp7a, col = "gray", cex = 0.2, pch = 16 )
+    mtext(mm$call,3,line=1)
+}
+
+
+
