@@ -20,7 +20,7 @@ plot(temps$doy, temps$temp3p, cex = 0.3, pch = 16 )
 ii <- !( is.na( temps$temp3p ) | is.na( temps$temp7a ) )
 fields::quilt.plot( 
     temps$doy[ii], temps$temp7a[ii], temps$temp3p[ii],
-    xlab = "7am temp (C)", ylab = "Day of Year",
+    ylab = "7am temp (C)", xlab = "Day of Year",
     main = "3pm Temp, by 7am Temp and Day of Year"
 )
 
@@ -72,6 +72,7 @@ temps$month <- format( temps$date, "%m-%b" )
 summary( lm( temp3p ~ temp7a + month, data = temps ) )
 summary( lm( temp3p ~ temp7a + month - 1, data = temps ) )
 summary( lm( temp3p ~ temp7a * month, data = temps ) )
+summary( lm( temp3p ~ month + temp7a:month - 1, data = temps ) )
 
 # investigate May vs Nov in a plot
 xlims <- c(-20,30)
@@ -114,6 +115,8 @@ doy_grid <- seq(1,366, length.out=ngrid)
 grid <- expand.grid( doy = doy_grid, temp7a = temp7a_grid )
 grid$sin_day <- sin(2*pi*grid$doy/365.25)
 grid$cos_day <- cos(2*pi*grid$doy/365.25)
+grid$sin_day2 <- sin(4*pi*grid$doy/365.25)
+grid$cos_day2 <- cos(4*pi*grid$doy/365.25)
 
 m1$preds <- predict(m1, grid)
 m2$preds <- predict(m2, grid)
@@ -124,7 +127,6 @@ m6$preds <- predict(m6, grid)
 
 par(mfrow=c(2,3))
 for( mm in list(m1,m2,m3,m4,m5,m6) ){
-    print(mm)
     z <- matrix(mm$preds,ngrid,ngrid)
     fields::image.plot(doy_grid, temp7a_grid, z)
     points(temps$doy, temps$temp7a, col = "gray", cex = 0.2, pch = 16 )
@@ -150,5 +152,28 @@ for( mm in list(m1,m3,m4,m5,m6,m7) ){
     mtext(mm$call,3,line=1)
 }
 
+m8 <- lm( 
+    temp3p ~ temp7a + doy,
+    data = temps 
+)
+summary(m8)
+m8$preds <- predict(m8, grid)
 
+par(mfrow=c(2,3))
+for( mm in list(m1,m8,m4,m5,m6,m7) ){
+    print(mm)
+    z <- matrix(mm$preds,ngrid,ngrid)
+    fields::image.plot(doy_grid, temp7a_grid, z)
+    points(temps$doy, temps$temp7a, col = "gray", cex = 0.2, pch = 16 )
+    mtext(mm$call,3,line=1)
+}
 
+m4a$preds <- predict(m4a, grid)
+
+plot(grid$doy, m4$preds, type = "l" )
+lines(grid$doy, m4a$preds, col = "magenta" )
+
+length(m4$residuals)
+length(temps$doy[ii])
+
+plot( temps$doy[ii], m6$residuals )
