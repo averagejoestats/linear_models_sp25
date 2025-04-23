@@ -1,0 +1,129 @@
+---
+title: "SDS 439 - Homework 06"
+subtitle: "Due April 14, 1:00 pm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Batteries
+
+We have a dataset measuring the lifetimes of three different battery types
+at three different temperatures. At each type x temperature combination,
+there are four independent observations. 
+
+1. Load the data and make an informative plot, showing information about the 
+   type, temperature, and lifetimes
+   
+```{r}
+dat <- read.table( "../datasets/battery.txt", header = TRUE )
+head(dat)
+
+plot( 
+    dat$temp + dat$type*5 - 10, 
+    dat$life, type = "n", xlab = "Temperature", 
+    ylab = "Lifetime (hours)"
+)
+text( dat$temp + dat$type*5 - 10, dat$life, dat$type )
+```
+
+2. Fit the two-factor additive model, treating lifetime as the response,
+   and type and temperature as the two factors, and print the table.
+   
+```{r}
+m1 <- lm( life ~ as.factor(type) + as.factor(temp), data = dat )
+summary(m1)
+```
+
+3. Give a brief description of why each parameter estimate "makes sense".
+
+```{r}
+# (Intercept) = 122.47 is expected lifetime for type 1 at 15 degrees, which
+# makes sense because that's roughly the average for that combination
+# type2 = 25.17 makes sense because battery type 2 generally does better
+# than battery type 1
+# type3 = 41.92 makes sense because battery type 3 does better than both
+# battery type 2 and battery type 1
+# temp70 = -37.25 makes sense because the lifetimes are generally shorter
+# at 70 degrees than at 15 degrees
+# temp125 = -80.67 makes sense because the lifetimes are the shortest
+# at 125 degrees
+```
+
+4. Fit the two-factor interaction model and print the summary table
+
+```{r}
+m2 <- lm( life ~ as.factor(type)*as.factor(temp), data = dat )
+summary(m2)
+```
+
+5. The largest interaction term is between type 3 and temperature 70. Give
+   an interpretation for this term and explain why it makes sense that
+   this is the largest interaction.
+   
+```{r}
+# This is [ (type 3, temp 70) - (type 1, temp 70) ] - 
+#         [ (type 3, temp 15) - (type 1, temp 15) ]
+# It makes sense that this estimate is large, because these two types have
+# roughly the same lifetimes at 15 degrees, but type 3 outperforms type 1
+# at 70 degrees by a large margin.
+```
+
+6. Now fit a factor numeric interaction model, where type is the factor, and
+   temperature is a numeric covariate, and print the model summary
+   
+```{r}
+m3 <- lm( life ~ as.factor(type)*temp, data = dat )
+summary(m3)
+```
+
+7. What are the slopes for the three types, and which type has the worst
+   performance with respect to increasing temperature?
+   
+```{r}
+# type 1
+m3$coefficients["temp"]
+
+# type 2
+m3$coefficients["temp"] + m3$coefficients["as.factor(type)2:temp"]
+
+# type 3
+m3$coefficients["temp"] + m3$coefficients["as.factor(type)3:temp"]
+```
+
+8. The factor-factor interaction model is different from the factor-numeric
+   interaction model. Explain how they are different and which of the two
+   models is more flexible.
+   
+```{r}
+# The factor-numeric interaction model assumes that the effect of
+# temperature is linear for each type. Since the temperatures are
+# spaced out evenly, this means that the effect of changing from 15 to
+# 70 degrees is assumed to be the same as the effect of changing from
+# 70 to 125 degrees. The factor-factor interaction model does not impose
+# this constraint on the effect of temperature, so it is more flexible.
+```
+
+9. Fit a model that has type as factor, and temperature as numeric,
+   but include linear and quadratic effects of temperature, and the linear
+   and quadratic terms both interact with type. Print the model summary.
+   
+```{r}
+m4 <- lm( life ~ as.factor(type)*temp + as.factor(type)*I(temp^2), data = dat)
+summary(m4)
+```
+
+10. Which of the previous models is this model equivalant to? If you've 
+    implemented it correctly, it should be equivalent to one of the
+    other models you've fit.
+
+```{r}
+# It's equivalent to the factor-factor interaction model. This is because
+# the model assumes that each type gets its own quadratic without any
+# constraints on how the quadratics from different types are related to one
+# another. This allows the quadratic model to match the factor-factor
+# interaction fitted values exactly, since a quadratic can be fit perfectly to
+# any three points.
+```
