@@ -44,8 +44,13 @@ m7 <- lmer(
     data = dat 
 )
 summary(m7)
-
 sqrt( 0.9073 + 3.8197 )
+
+?lmer
+
+fitted(m7)
+ranef(m7)
+
 
 m8 <- lmer( 
     childHeight ~ gender + father + mother + (gender|family), 
@@ -53,12 +58,14 @@ m8 <- lmer(
 )
 summary(m8)
 
+# number of children in the model
+m9 <- lmer( childHeight ~ children + gender + father + mother + (1|family), data = dat )
+summary(m9)
 
 
 
 
-m6 <- lmer( childHeight ~ children + gender + father + mother + (1|family), data = dat )
-summary(m6)
+
 
 # create a genderNum variable, indicating order within gender
 fam <- unique( dat$family )
